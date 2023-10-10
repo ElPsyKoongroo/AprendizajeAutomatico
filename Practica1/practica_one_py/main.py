@@ -1,33 +1,119 @@
-import csv
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+
+
+
+
+#       _______. _______ .______        _______  __    ______          
+#      /       ||   ____||   _  \      /  _____||  |  /  __  \         
+#     |   (----`|  |__   |  |_)  |    |  |  __  |  | |  |  |  |        
+#      \   \    |   __|  |      /     |  | |_ | |  | |  |  |  |        
+#  .----)   |   |  |____ |  |\  \----.|  |__| | |  | |  `--'  |        
+#  |_______/    |_______|| _| `._____| \______| |__|  \______/         
+#                                                                      
+#    _______      ___      .______        ______  __       ___         
+#   /  _____|    /   \     |   _  \      /      ||  |     /   \        
+#  |  |  __     /  ^  \    |  |_)  |    |  ,----'|  |    /  ^  \       
+#  |  | |_ |   /  /_\  \   |      /     |  |     |  |   /  /_\  \      
+#  |  |__| |  /  _____  \  |  |\  \----.|  `----.|  |  /  _____  \     
+#   \______| /__/     \__\ | _| `._____| \______||__| /__/     \__\    
+#                                                                      
+#  .___  ___.      ___        ______  __       ___           _______.  
+#  |   \/   |     /   \      /      ||  |     /   \         /       |  
+#  |  \  /  |    /  ^  \    |  ,----'|  |    /  ^  \       |   (----`  
+#  |  |\/|  |   /  /_\  \   |  |     |  |   /  /_\  \       \   \      
+#  |  |  |  |  /  _____  \  |  `----.|  |  /  _____  \  .----)   |     
+#  |__|  |__| /__/     \__\  \______||__| /__/     \__\ |_______/      
+#                                                                      
+
 
 LEARNING_RATE = 0.001
-ITERS = 1000
+ITERS = 10_000
 
 # En porcentaje
-BATCH = 100
+BATCH = 50
 
-def hypotesis(thetas, X) -> float :
-    h = 0.0
-    for i,entry in enumerate(X):
-        h += entry*thetas[i+1]
-    h+=thetas[0]
+import matplotlib.pyplot as plt
 
-    return h
+def representar(x, y):
     
+    plt.scatter(x, y)
+    plt.show()
 
-#def cost_function():
-#    return (1/2)
+def hypotesis(thetas: np.ndarray[np.float64], X: np.ndarray[np.float64]) -> float :
+    # Multiplicacion de matrices + suma de sus elementos
+    return np.dot(thetas, X);
 
 
-    '''
-    theta0 = (1/m) * np.sum(hypothesis(thetas, X) - 1)
-    theta1 = (1/m) * np.sum((hypothesis(thetas, X) - 1)*X)
+#               _         _____    ____    _____    _____   _______   __  __    ____     _____ 
+#       /\     | |       / ____|  / __ \  |  __ \  |_   _| |__   __| |  \/  |  / __ \   / ____|
+#      /  \    | |      | |  __  | |  | | | |__) |   | |      | |    | \  / | | |  | | | (___  
+#     / /\ \   | |      | | |_ | | |  | | |  _  /    | |      | |    | |\/| | | |  | |  \___ \ 
+#    / ____ \  | |____  | |__| | | |__| | | | \ \   _| |_     | |    | |  | | | |__| |  ____) |
+#   /_/    \_\ |______|  \_____|  \____/  |_|  \_\ |_____|    |_|    |_|  |_|  \____/  |_____/ 
+#                                                                                              
 
-    theta0 -= learning_rate*gradient_theta0
-    theta1 -= learning_rate*gradient_theta1
-    '''
+
+def descenso_gradiente(X: np.ndarray[np.float64], y: np.ndarray[np.float64]) -> np.ndarray[np.float64]:
+    (ROWS, COLUMS) = X.shape
+    thetas = np.array([0.0]*COLUMS, dtype=np.float64)
+
+
+    errors = np.array([0.0]*ROWS, dtype=np.float64)
+    for _ in range(0, ITERS):
+        for i, entry in enumerate(X):
+            errors[i] = hypotesis(thetas, entry)-y[i]
+            
+        for i, _ in enumerate(thetas):
+            gradiente = np.dot(X[:, i].T, errors)
+            thetas[i] -= LEARNING_RATE/ROWS*gradiente
+            
+    print("[Descenso por gradiente] ", thetas)
+    return thetas
+
+def descenso_gradiente_estocastico(fX: np.ndarray[np.float64], fy: np.ndarray[np.float64]) -> np.ndarray[np.float64]:
+    # Seleccionar el BATCH a calcular mediante porcentaje
+    i = fX.shape[0] * BATCH // 100
+    X = fX[:i, :]
+    y = fy[:i]
+    
+    (ROWS, COLUMS) = X.shape
+    thetas = np.array([0.0]*COLUMS, dtype=np.float64)
+
+
+    errors = np.array([0.0]*ROWS, dtype=np.float64)
+    
+    for _ in range(0, ITERS):
+        for i, entry in enumerate(X):
+            errors[i] = hypotesis(thetas, entry)-y[i]
+            
+        for i, _ in enumerate(thetas):
+            gradiente = np.dot(X[:, i].T, errors)
+            thetas[i] -= LEARNING_RATE/ROWS*gradiente
+    print("[Descenso por gradiente estocastico] ", thetas)
+    return thetas
+
+def ecuacion_normal(X: np.ndarray[np.float64], y: np.ndarray[np.float64]) -> np.ndarray[np.float64]:
+    thetas = np.linalg.inv(X.T @ X) @ X.T @ y;
+    print("[Ecuacion normal] ", thetas)
+    return thetas
+
+def mide_tiempo(funcion: callable, args: any) -> any:
+    import time
+
+    inicio = time.perf_counter()
+    res = funcion(*args)
+    fin = time.perf_counter()
+    nombre = funcion.__name__
+    print(f"[TIEMPO DE: {nombre}] -> {(fin - inicio)*1000:.2f}ms")
+    return res
+
+def prediccion(thetas: np.ndarray[np.float64], x: float) -> float:
+    pred = 0.0
+    for i,theta in enumerate(thetas):
+        pred += theta*pow(x,i)
+    return pred
 
 
 def main():
@@ -35,24 +121,18 @@ def main():
     X = data.iloc[:, :-1].values
     y = data.iloc[:, -1].values
 
+    pad_width = ((0, 0), (1, 0)) 
+    X = np.pad(X, pad_width, mode='constant', constant_values=1)
     
-    THETAS = [0.0]*X.ndim
+    thetas = mide_tiempo(descenso_gradiente, (X, y))
+    print("\n\n")
+    mide_tiempo(descenso_gradiente_estocastico,(X,y))
+    print("\n\n")
+    mide_tiempo(ecuacion_normal, (X, y))
 
-    for _ in range(0, ITERS):
-        errors = [0.0]*X.size
-        for i, entry in enumerate(X):
-            errors[i] = hypotesis(THETAS, entry)-y[i]
-
-        for i, theta in enumerate(THETAS):
-            sum = 0
-            for row,instance in enumerate(X):
-                sum += errors[row] * instance[i]
-            THETAS[i] = theta - LEARNING_RATE*sum
-
-    print(THETAS)
-
-
+    p = prediccion(thetas, 9.5)
+    print(p)
     
-
+  
 if __name__ == "__main__":
     main()
