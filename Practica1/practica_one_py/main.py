@@ -2,9 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
-
-
 #       _______. _______ .______        _______  __    ______          
 #      /       ||   ____||   _  \      /  _____||  |  /  __  \         
 #     |   (----`|  |__   |  |_)  |    |  |  __  |  | |  |  |  |        
@@ -28,22 +25,15 @@ import matplotlib.pyplot as plt
 #                                                                      
 
 
-LEARNING_RATE = 0.001
-ITERS = 10_000
+LEARNING_RATE = 0.01
+ITERS = 1_000
 
 # En porcentaje
 BATCH = 50
 
-import matplotlib.pyplot as plt
-
 def representar(x, y):
-    
     plt.scatter(x, y)
     plt.show()
-
-def hypotesis(thetas: np.ndarray[np.float64], X: np.ndarray[np.float64]) -> float :
-    # Multiplicacion de matrices + suma de sus elementos
-    return np.dot(thetas, X);
 
 
 #               _         _____    ____    _____    _____   _______   __  __    ____     _____ 
@@ -54,12 +44,16 @@ def hypotesis(thetas: np.ndarray[np.float64], X: np.ndarray[np.float64]) -> floa
 #   /_/    \_\ |______|  \_____|  \____/  |_|  \_\ |_____|    |_|    |_|  |_|  \____/  |_____/ 
 #                                                                                              
 
+def hypotesis(thetas: np.ndarray[np.float64], entry: np.ndarray[np.float64]) -> float :
+    # Multiplicacion de matrices + suma de sus elementos
+    return np.dot(thetas, entry);
 
 def descenso_gradiente(X: np.ndarray[np.float64], y: np.ndarray[np.float64]) -> np.ndarray[np.float64]:
     (ROWS, COLUMS) = X.shape
     thetas = np.array([0.0]*COLUMS, dtype=np.float64)
 
-
+    evolucion_error = []
+    square = lambda x: pow(x,2)
     errors = np.array([0.0]*ROWS, dtype=np.float64)
     for _ in range(0, ITERS):
         for i, entry in enumerate(X):
@@ -68,7 +62,7 @@ def descenso_gradiente(X: np.ndarray[np.float64], y: np.ndarray[np.float64]) -> 
         for i, _ in enumerate(thetas):
             gradiente = np.dot(X[:, i].T, errors)
             thetas[i] -= LEARNING_RATE/ROWS*gradiente
-            
+
     print("[Descenso por gradiente] ", thetas)
     return thetas
 
@@ -111,10 +105,20 @@ def mide_tiempo(funcion: callable, args: any) -> any:
 
 def prediccion(thetas: np.ndarray[np.float64], x: float) -> float:
     pred = 0.0
-    for i,theta in enumerate(thetas):
-        pred += theta*pow(x,i)
-    return pred
+    for theta in thetas[1:]:
+        pred += theta*x
+    return pred+thetas[0]
 
+
+#  __/\\\\____________/\\\\_        _____/\\\\\\\\\____        __/\\\\\\\\\\\_        __/\\\\\_____/\\\_        
+#   _\/\\\\\\________/\\\\\\_        ___/\\\\\\\\\\\\\__        _\/////\\\///__        _\/\\\\\\___\/\\\_       
+#    _\/\\\//\\\____/\\\//\\\_        __/\\\/////////\\\_        _____\/\\\_____        _\/\\\/\\\__\/\\\_      
+#     _\/\\\\///\\\/\\\/_\/\\\_        _\/\\\_______\/\\\_        _____\/\\\_____        _\/\\\//\\\_\/\\\_     
+#      _\/\\\__\///\\\/___\/\\\_        _\/\\\\\\\\\\\\\\\_        _____\/\\\_____        _\/\\\\//\\\\/\\\_    
+#       _\/\\\____\///_____\/\\\_        _\/\\\/////////\\\_        _____\/\\\_____        _\/\\\_\//\\\/\\\_   
+#        _\/\\\_____________\/\\\_        _\/\\\_______\/\\\_        _____\/\\\_____        _\/\\\__\//\\\\\\_  
+#         _\/\\\_____________\/\\\_        _\/\\\_______\/\\\_        __/\\\\\\\\\\\_        _\/\\\___\//\\\\\_ 
+#          _\///______________\///__        _\///________\///__        _\///////////__        _\///_____\/////__
 
 def main():
     data = pd.read_csv("regresion_1.csv")
